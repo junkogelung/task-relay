@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>タスク送信</title>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+       text-align:center;padding:40px 20px;color:#222;background:#fff}
+  .box{max-width:440px;margin:0 auto}
+  h1{font-size:19px;color:#444}
+  .info{color:#555;font-size:15px;margin:8px 0 18px}
+  .big{font-size:24px;font-weight:bold;margin:14px 0}
+  .ok{color:#1a7f5a}
+  .err{color:#c0392b}
+  .hint{color:#777;font-size:14px;margin-top:8px}
+  button{font-size:16px;padding:12px 26px;border-radius:12px;border:0;
+         background:#0a7a4a;color:#fff;margin-top:22px}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>タスク送信</h1>
+  <div id="info" class="info"></div>
+  <div id="status" class="big">送信中…</div>
+  <div id="hint" class="hint"></div>
+  <button id="again" style="display:none">もう一度送る</button>
+</div>
+<script>
+  // GAS ウェブアプリ（宛先へ LINE WORKS 通知を出す本体）。
+  // ※ ここには患者情報も鍵も入りません。渡すのは 病棟 w / 宛先コード t / タスクNo. no だけ。
+  var GAS = "https://script.google.com/macros/s/AKfycbxPhRi_TvZqVuxgBEwPSK6VBkQ4lLz_9ObjMeVvOG09zEGWz7n_NwgKumBHfmjYMWQjrw/exec";
+
+  function qs(k){ return new URLSearchParams(location.search).get(k) || ""; }
+  var w = qs("w"), t = qs("t"), no = qs("no"), x = qs("x");
+
+  document.getElementById("info").textContent =
+      "【" + w + " → " + t + "】タスクNo." + no + (x === "1" ? "（消去通知）" : "");
+
+  function send(){
+    var s = document.getElementById("status");
+    var again = document.getElementById("again");
+    s.className = "big"; s.textContent = "送信中…";
+    document.getElementById("hint").textContent = "";
+    again.style.display = "none";
+    var url = GAS + "?w=" + encodeURIComponent(w)
+                  + "&t=" + encodeURIComponent(t)
+                  + "&no=" + encodeURIComponent(no)
+                  + (x ? "&x=" + encodeURIComponent(x) : "");
+    // Google のログイン判定を避けるため、Cookie を送らない匿名リクエストで叩く
+    fetch(url, { mode: "no-cors", credentials: "omit", cache: "no-store" })
+      .then(function(){
+        s.className = "big ok"; s.textContent = "✓ 送信しました";
+        document.getElementById("hint").textContent = "宛先の LINE WORKS に通知を送りました。";
+        again.style.display = "inline-block";
+      })
+      .catch(function(){
+        s.className = "big err"; s.textContent = "送信できませんでした";
+        document.getElementById("hint").textContent = "電波を確認して［もう一度送る］を押してください。";
+        again.style.display = "inline-block";
+      });
+  }
+
+  document.getElementById("again").onclick = send;
+
+  if(!w || !t || !no){
+    var s = document.getElementById("status");
+    s.className = "big err"; s.textContent = "URL が不正です";
+    document.getElementById("hint").textContent = "QR を作り直してください。";
+  } else {
+    send();
+  }
+</script>
+</body>
+</html>
