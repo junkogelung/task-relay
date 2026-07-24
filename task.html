@@ -49,7 +49,7 @@
 
   function qs(k){ return new URLSearchParams(location.search).get(k) || ""; }
   function enc(v){ return encodeURIComponent(v); }
-  var w = qs("w"), t = qs("t"), no = qs("no"), x = qs("x"), p = qs("p"), d = qs("d");
+  var w = qs("w"), t = qs("t"), no = qs("no"), x = qs("x"), p = qs("p"), d = qs("d"), c = qs("c"), by = qs("by");
 
   var elStatus   = document.getElementById("status");
   var elHint     = document.getElementById("hint");
@@ -63,6 +63,7 @@
   if (p) meta.push("優先度: " + p);
   if (d) meta.push("期限: " + d);
   elInfo.textContent = "【" + w + " → " + t + "】タスクNo." + no
+      + (c === "1" ? "（完了通知）" : "")
       + (x === "1" ? "（消去通知）" : "")
       + (meta.length ? "（" + meta.join(" / ") + "）" : "");
 
@@ -98,7 +99,8 @@
     elStatus.className = "big"; elStatus.textContent = "送信中…";
     elHint.textContent = ""; elClose.style.display = "none"; elAgain.style.display = "none";
     var url = GAS + "?w=" + enc(w) + "&t=" + enc(t) + "&no=" + enc(no)
-                  + (x ? "&x=" + enc(x) : "") + (p ? "&p=" + enc(p) : "") + (d ? "&d=" + enc(d) : "");
+                  + (x ? "&x=" + enc(x) : "") + (p ? "&p=" + enc(p) : "") + (d ? "&d=" + enc(d) : "")
+                  + (c ? "&c=" + enc(c) : "") + (by ? "&by=" + enc(by) : "");
     // Google のログイン判定を避けるため、Cookie を送らない匿名リクエストで叩く
     fetch(url, { mode: "no-cors", credentials: "omit", cache: "no-store" })
       .then(function(){ markSent(); showSent(false); tryClose(); })
